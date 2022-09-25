@@ -1,0 +1,13 @@
+[submodule "thirdparty/imgui/imgui"]
+	path = thirdparty/imgui/imgui
+	url = https://github.com/ocornut/imgui
+	branch = docking
+[submodule "thirdparty/glfw"]
+	path = thirdparty/glfw
+	url = https://github.com/glfw/glfw
+[submodule "thirdparty/allwpilib"]
+	path = thirdparty/allwpilib
+	url = https://github.com/wpilibsuite/allwpilib
+[submodule "thirdparty/fmt"]
+	path = thirdparty/fmt
+	url = https://github.com/fmtlib/fmt
