@@ -57,7 +57,6 @@ set(TD_THIRDPARTY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty")
 
 set(TD_RES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/res")
 
-
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/util.cmake")
 
 if(TD_WINDOWS)
@@ -104,6 +103,8 @@ build_dashboard_resource("${TD_RES_DIR}/fonts/Ubuntu/Ubuntu-Regular.ttf"       "
 build_dashboard_resource("${TD_RES_DIR}/fonts/Ubuntu/Ubuntu-Bold.ttf"          "Ubuntu_Bold_ttf")
 build_dashboard_resource("${TD_RES_DIR}/fonts/Font-Awesome/fa-regular-400.ttf" "FontAwesome_Regular_ttf")
 build_dashboard_resource("${TD_RES_DIR}/fonts/Font-Awesome/fa-solid-900.ttf"   "FontAwesome_Solid_ttf")
+
+build_dashboard_resource("${HD_RES_DIR}/images/no_camera.png" "no_camera_png")
 
 # --- Thirdparty ---
 
