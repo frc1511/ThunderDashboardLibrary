@@ -12,10 +12,9 @@ namespace frc1511 {
 
 class CameraPage : public Page {
 protected:
+  // Media must be MJPG stream (Content-Type "multipart/x-mixed-replace").
   CameraPage(std::string_view name, std::string_view url);
   virtual ~CameraPage();
-
-  void set_fps(std::size_t fps);
 
   /**
    * @brief Returns an OpenGL texture ID for the current frame.
@@ -33,8 +32,7 @@ protected:
   void terminate();
 
 public:
-
-  void init();
+  void init() override;
 
   /**
    * @brief Sets whether the camera thread is running.
@@ -46,10 +44,6 @@ private:
 
   std::thread camera_thread;
   std::mutex camera_mutex;
-  
-#ifdef TD_WITH_CS
-  std::unique_ptr<cs::HttpCamera> camera;
-#endif
 
   // OpenGL textures.
   unsigned int no_cam_tex, frame_tex, working_frame_tex;
@@ -60,8 +54,6 @@ private:
   bool thread_running = false;
   bool thread_terminated = false;
   bool has_frame = false;
-
-  std::size_t fps = 30;
 
   static inline std::mutex gl_mutex;
 

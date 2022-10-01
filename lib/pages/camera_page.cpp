@@ -6,6 +6,10 @@
 
 using namespace frc1511;
 
+#define CAMERA_FPS 30
+#define CAMERA_RES_X 320
+#define CAMERA_RES_Y 240
+
 static void setup_tex(unsigned int& tex) {
   glGenTextures(1, &tex);
   glBindTexture(GL_TEXTURE_2D, tex);
@@ -19,13 +23,6 @@ CameraPage::CameraPage(std::string_view _name, std::string_view _url)
 : name(_name), url(_url) { }
 
 void CameraPage::init() {
-#ifdef TD_WITH_CS
-  camera = std::make_unique<cs::HttpCamera>(name, url, cs::HttpCamera::HttpCameraKind::kMJPGStreamer);
-  camera->SetVideoMode(cs::VideoMode::kMJPEG, 320, 240, 30);
-#endif
-  
-  //set_fps(fps);
-
   int width, height, nr_channels;
   unsigned char* img_data = stbi_load_from_memory(no_camera_png, no_camera_png_size, &width, &height, &nr_channels, 0);
 
@@ -60,15 +57,6 @@ CameraPage::~CameraPage() {
   glDeleteTextures(1, &working_frame_tex);
 }
 
-void CameraPage::set_fps(std::size_t _fps) {
-  std::lock_guard<std::mutex> lk(camera_mutex);
-  fps = _fps;
-
-#ifdef TD_WITH_CS
-  camera->SetFPS(fps);
-#endif
-}
-
 unsigned int CameraPage::get_frame_texture() {
   std::lock_guard<std::mutex> lk(camera_mutex);
   if (has_frame) {
@@ -99,14 +87,21 @@ void CameraPage::thread_start() {
 #ifdef TD_WITH_CS
   using namespace std::chrono_literals;
 
-  cs::CvSink cv_sink;
-  cv::Mat frame;
-
+  std::string_view _name, _url;
   {
     std::lock_guard<std::mutex> lk(camera_mutex);
-    cv_sink.SetSource(*camera);
+    _name = name;
+    _url = url;
   }
+
+  cs::HttpCamera camera(_name, _url, cs::HttpCamera::HttpCameraKind::kMJPGStreamer);
+  camera.SetVideoMode(cs::VideoMode::kMJPEG, CAMERA_RES_X, CAMERA_RES_Y, CAMERA_FPS);
+
+  cs::CvSink cv_sink(_name);
+  cv_sink.SetSource(camera);
   cv_sink.SetEnabled(true);
+
+  cv::Mat frame;
 
   std::chrono::steady_clock::time_point start, end;
 
@@ -126,16 +121,14 @@ void CameraPage::thread_start() {
       continue;
     }
 
-    {
-      std::lock_guard<std::mutex> lk(camera_mutex);
-      cv_sink.SetSource(*camera);
-    }
-
-    uint64_t frame_time = cv_sink.GrabFrame(frame);
+    uint64_t frame_time = cv_sink.GrabFrame(frame); // Returns 0 on fail.
 
     if (frame_time) {
+      // Generate the OpenGL texture.
       {
         std::lock_guard<std::mutex> lk(gl_mutex);
+
+        // GrabFrame() apparently returns mat in BGR, so convert it to RGB?
         cv::cvtColor(frame, frame, cv::COLOR_BGR2RGB);
 
         glBindTexture(GL_TEXTURE_2D, working_frame_tex);
@@ -143,6 +136,7 @@ void CameraPage::thread_start() {
         glGenerateMipmap(GL_TEXTURE_2D);
       }
 
+      // Swap the frame textures.
       {
         std::lock_guard<std::mutex> lk(camera_mutex);
 
@@ -156,33 +150,24 @@ void CameraPage::thread_start() {
 
         has_frame = true;
       }
-  
-      end = std::chrono::high_resolution_clock::now();
-      double dur(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() * 0.001);
-
-      std::size_t freq;
-      {
-        std::lock_guard<std::mutex> lk(camera_mutex);
-        freq = fps;
-      }
-
-      double period = 1.0 / freq;
-
-      if (dur < period) {
-        std::size_t sleep_time = (period - dur) * 1000.0;
-        std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
-      }
     }
     else {
+      std::cout << "Error grabbing frame: " << cv_sink.GetError() << '\n';
+
       {
         std::lock_guard<std::mutex> lk(camera_mutex);
         has_frame = false;
       }
+    }
 
-      std::cout << "no frame? " << cv_sink.GetError() << '\n';
-      
-      // Try again in 1 second.
-      std::this_thread::sleep_for(1s);
+    end = std::chrono::high_resolution_clock::now();
+    double dur(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() * 0.001);
+
+    double period = 1.0 / CAMERA_FPS;
+
+    if (dur < period) {
+      std::size_t sleep_time = (period - dur) * 1000.0;
+      std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
     }
   }
 #endif
