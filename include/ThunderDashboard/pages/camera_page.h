@@ -45,17 +45,19 @@ private:
   std::thread camera_thread;
   std::mutex camera_mutex;
 
+#ifdef TD_WITH_CS
+  cv::Mat frame;
+#endif
+
   // OpenGL textures.
-  unsigned int no_cam_tex, frame_tex, working_frame_tex;
+  unsigned int no_cam_tex, frame_tex;
 
   // Aspect ratios.
   double no_cam_ar, frame_ar;
 
   bool thread_running = false;
   bool thread_terminated = false;
-  bool has_frame = false;
-
-  static inline std::mutex gl_mutex;
+  bool has_frame = false, new_frame = false;
 
   void thread_start();
 };

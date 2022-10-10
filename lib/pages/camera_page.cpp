@@ -30,15 +30,10 @@ void CameraPage::init() {
 
   int tex_channels(nr_channels == 3 ? GL_RGB : GL_RGBA);
 
-  {
-    std::lock_guard<std::mutex> lk(gl_mutex);
-    setup_tex(no_cam_tex);
-    glTexImage2D(GL_TEXTURE_2D, 0, tex_channels, width, height, 0, tex_channels, GL_UNSIGNED_BYTE, img_data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    setup_tex(frame_tex);
-    setup_tex(working_frame_tex);
-  }
+  setup_tex(no_cam_tex);
+  glTexImage2D(GL_TEXTURE_2D, 0, tex_channels, width, height, 0, tex_channels, GL_UNSIGNED_BYTE, img_data);
+  glGenerateMipmap(GL_TEXTURE_2D);
+  setup_tex(frame_tex);
 
   stbi_image_free(img_data);
 
@@ -50,15 +45,22 @@ void CameraPage::init() {
 }
 
 CameraPage::~CameraPage() {
+  std::lock_guard<std::mutex> lk(camera_mutex);
   terminate();
   camera_thread.join();
   glDeleteTextures(1, &no_cam_tex);
   glDeleteTextures(1, &frame_tex);
-  glDeleteTextures(1, &working_frame_tex);
 }
 
 unsigned int CameraPage::get_frame_texture() {
   std::lock_guard<std::mutex> lk(camera_mutex);
+
+  if (new_frame) {
+    glBindTexture(GL_TEXTURE_2D, frame_tex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, frame.cols, frame.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, frame.data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+  }
+
   if (has_frame) {
     return frame_tex;
   }
@@ -101,7 +103,7 @@ void CameraPage::thread_start() {
   cv_sink.SetSource(camera);
   cv_sink.SetEnabled(true);
 
-  cv::Mat frame;
+  cv::Mat working_frame;
 
   std::chrono::steady_clock::time_point start, end;
 
@@ -121,33 +123,23 @@ void CameraPage::thread_start() {
       continue;
     }
 
-    uint64_t frame_time = cv_sink.GrabFrame(frame); // Returns 0 on fail.
+    uint64_t frame_time = cv_sink.GrabFrame(working_frame); // Returns 0 on fail.
 
     if (frame_time) {
-      // Generate the OpenGL texture.
-      {
-        std::lock_guard<std::mutex> lk(gl_mutex);
-
-        // GrabFrame() apparently returns mat in BGR, so convert it to RGB?
-        cv::cvtColor(frame, frame, cv::COLOR_BGR2RGB);
-
-        glBindTexture(GL_TEXTURE_2D, working_frame_tex);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, frame.cols, frame.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, frame.data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-      }
+      // GrabFrame() apparently returns mat in BGR, so convert it to RGB?
+      cv::cvtColor(working_frame, working_frame, cv::COLOR_BGR2RGB);
 
       // Swap the frame textures.
       {
         std::lock_guard<std::mutex> lk(camera_mutex);
 
-        // Swap the frame textures.
-        unsigned int old_frame_tex = frame_tex;
-        frame_tex = working_frame_tex;
-        working_frame_tex = old_frame_tex;
+        // Swap the frame.
+        frame = working_frame;
 
         // Aspect ratio.
         frame_ar = static_cast<double>(frame.cols) / static_cast<double>(frame.rows);
 
+        new_frame = true;
         has_frame = true;
       }
     }
@@ -156,7 +148,7 @@ void CameraPage::thread_start() {
 
       {
         std::lock_guard<std::mutex> lk(camera_mutex);
-        has_frame = false;
+        new_frame = false;
       }
     }
 
