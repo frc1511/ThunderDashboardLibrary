@@ -36,6 +36,9 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui.h>
 
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
 #include <fmt/core.h>
 
 struct GLFWwindow;
