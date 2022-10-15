@@ -320,7 +320,7 @@ static void set_imgui_style() {
   font_cfg.MergeMode = false;
   font_cfg.PixelSnapH = false;
 
-  FontManager::get()->big = io->Fonts->AddFontFromMemoryTTF(reinterpret_cast<void*>(Ubuntu_Bold_ttf), Ubuntu_Bold_ttf_size, 30.0f, &font_cfg, ranges);
+  FontManager::get()->big = io->Fonts->AddFontFromMemoryTTF(reinterpret_cast<void*>(Ubuntu_Bold_ttf), Ubuntu_Bold_ttf_size, 50.0f, &font_cfg, ranges);
 
   io->ConfigWindowsMoveFromTitleBarOnly = true;
 }
