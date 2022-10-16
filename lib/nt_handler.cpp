@@ -55,6 +55,9 @@ NTHandler::MatchMode NTHandler::get_match_mode() {
   else if (ctrl_word.test) {
     return MatchMode::TEST;
   }
+  else if (ctrl_word.eStop) {
+    return MatchMode::ESTOPPED;
+  }
   else {
     return MatchMode::TELEOP;
   }
@@ -67,6 +70,10 @@ NTHandler::Alliance NTHandler::get_alliance() {
   else {
     return Alliance::BLUE;
   }
+}
+
+NTHandler::MatchType NTHandler::get_match_type() {
+  return static_cast<NTHandler::MatchType>(fms_table->GetNumber("MatchType", 0));
 }
 
 std::size_t NTHandler::get_station_number() {

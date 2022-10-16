@@ -43,6 +43,8 @@ public:
     ELIM,
   };
 
+  MatchType get_match_type();
+
   std::size_t get_station_number();
 
   std::string get_event_name();
