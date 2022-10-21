@@ -293,6 +293,10 @@ static void set_imgui_style() {
   style.Colors[ImGuiCol_TabUnfocusedActive] = red_low;
   
   style.Colors[ImGuiCol_DockingPreview] = red_low;
+  style.Colors[ImGuiCol_DockingEmptyBg] = bg;
+
+  style.Colors[ImGuiCol_PlotHistogram] = red_mid;
+  style.Colors[ImGuiCol_PlotHistogramHovered] = red_high;
 
   style.Colors[ImGuiCol_TableHeaderBg] = grey_low;
   style.Colors[ImGuiCol_TableBorderStrong] = grey_mid;
