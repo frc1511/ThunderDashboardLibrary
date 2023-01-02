@@ -59,6 +59,8 @@ private:
   bool thread_terminated = false;
   bool has_frame = false, new_frame = false;
 
+  bool initialized = false;
+
   void thread_start();
 };
 

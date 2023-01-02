@@ -32,6 +32,8 @@
 #include <map>
 #include <sstream>
 #include <thread>
+#include <mutex>
+#include <set>
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui.h>

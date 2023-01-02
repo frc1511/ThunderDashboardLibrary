@@ -42,9 +42,13 @@ void CameraPage::init() {
   camera_thread = std::thread([&]() {
     thread_start();
   });
+
+  initialized = true;
 }
 
 CameraPage::~CameraPage() {
+  if (!initialized) return;
+
   std::lock_guard<std::mutex> lk(camera_mutex);
   terminate();
   camera_thread.join();

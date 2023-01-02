@@ -3,7 +3,6 @@
 #include <ThunderDashboard/dashboard.h>
 #include <networktables/NetworkTable.h>
 #include <networktables/NetworkTableInstance.h>
-#include <networktables/TableEntryListener.h>
 
 namespace frc1511 {
 
@@ -16,7 +15,12 @@ public:
   NTHandler(NTHandler const&) = delete;
   NTHandler& operator=(NTHandler const&) = delete;
 
-  void init();
+  enum class Version : std::size_t {
+    V4 = 0,
+    V3 = 1,
+  };
+
+  void init(Version version, bool ds_running);
   void update();
 
   enum class MatchMode {

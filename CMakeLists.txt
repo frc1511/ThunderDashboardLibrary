@@ -14,15 +14,15 @@ list(APPEND TD_DEF_LIST "TD_VERSION_STR=\"${TD_VERSION}\"")
 
 project(ThunderDashboard LANGUAGES C CXX VERSION ${TD_VERSION})
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+add_compile_options(-Wdeprecated-declarations -Wno-psabi)
 
 if(MSVC)
   #add_compile_options(/W4)
   message(STATUS "MSVC Compiler Detected")
-else()
-  add_compile_options(-Wall -Wextra -pedantic)
 endif()
 
 if(NOT CMAKE_BUILD_TYPE)

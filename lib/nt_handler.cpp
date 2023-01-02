@@ -19,13 +19,23 @@ NTHandler::NTHandler() = default;
 
 NTHandler::~NTHandler() = default;
 
-void NTHandler::init() {
+void NTHandler::init(Version version, bool ds_running) {
   nt_inst = nt::NetworkTableInstance::GetDefault();
   sd_table = nt_inst.GetTable("SmartDashboard");
   fms_table = nt_inst.GetTable("FMSInfo");
 
-  nt_inst.StartClientTeam(1511);
-  nt_inst.StartDSClient();
+  std::string identity = "ThunderDashboard";
+  if (version == Version::V3) {
+    nt_inst.StartClient3(identity);
+  } else {
+    nt_inst.StartClient4(identity);
+  }
+
+  nt_inst.SetServerTeam(1511);
+
+  if (ds_running) {
+    nt_inst.StartDSClient();
+  }
 }
 
 void NTHandler::update() {
@@ -98,17 +108,14 @@ std::size_t NTHandler::get_replay_number() {
 
 void NTHandler::set_bool(const std::string& key, bool value) {
   set_bools.insert_or_assign(key, value);
-  sd_table->PutBoolean(key, value);
 }
 
 void NTHandler::set_double(const std::string& key, double value) {
   set_doubles.insert_or_assign(key, value);
-  sd_table->PutNumber(key, value);
 }
 
 void NTHandler::set_string(const std::string& key, std::string_view value) {
   set_strings.insert_or_assign(key, value);
-  sd_table->PutString(key, value);
 }
 
 int32_t NTHandler::get_ctrl_word() {
