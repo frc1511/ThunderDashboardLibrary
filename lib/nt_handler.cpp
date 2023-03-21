@@ -74,7 +74,7 @@ NTHandler::MatchMode NTHandler::get_match_mode() {
 }
 
 NTHandler::Alliance NTHandler::get_alliance() {
-  if (static_cast<bool>(fms_table->GetNumber("IsRedAlliance", true))) {
+  if (static_cast<bool>(fms_table->GetBoolean("IsRedAlliance", true))) {
     return Alliance::RED;
   }
   else {
